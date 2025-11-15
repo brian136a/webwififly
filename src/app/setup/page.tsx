@@ -312,6 +312,15 @@ export default function SetupPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Handle session expiration
+        if (errorData.sessionExpired) {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          setSessionId(null);
+          setSubmitError('Session expired. Please refresh the page.');
+          return;
+        }
+        
         throw new Error(errorData.error || 'Failed to submit setup');
       }
 

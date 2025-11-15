@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { setupSchema } from '@/lib/validation';
-import { runAsync } from '@/db/client';
+import { runAsync, getAsync } from '@/db/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +15,15 @@ export async function POST(req: NextRequest) {
       planDownloadMbps,
       monthlyCostNzd,
     });
+
+    // Verify session exists before inserting setup record
+    const session = await getAsync('SELECT id FROM sessions WHERE id = ?', [validatedData.sessionId]);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Session expired. Please refresh the page.', sessionExpired: true },
+        { status: 400 }
+      );
+    }
 
     const id = uuidv4();
     const createdAt = Date.now();
