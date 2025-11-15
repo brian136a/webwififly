@@ -112,10 +112,10 @@ export async function finishSpeedtest(
       testRunId,
       sessionId,
       roomName,
-      dl: results.dl,
-      ul: results.ul,
-      ping: results.ping,
-      jitter: results.jitter,
+      downloadMbps: results.dl,
+      uploadMbps: results.ul,
+      pingMs: results.ping,
+      jitterMs: results.jitter,
     }),
   });
 
