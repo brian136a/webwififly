@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
     const recordId = await runAsync(
       `INSERT INTO speed_tests (
         id, session_id, room_name, download_mbps, upload_mbps, ping_ms, jitter_ms,
-        raw_dl_bytes, raw_ul_bytes, duration_ms, anomaly, display_dl_mbps, created_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        raw_dl_bytes, raw_ul_bytes, duration_ms, anomaly, display_dl_mbps, timestamp, created_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         require('crypto').randomUUID(),
         validated.sessionId,
@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
         validated.duration_ms || null,
         anomalyCheck.isAnomaly ? 1 : 0,
         anomalyCheck.displayDlMbps,
+        Date.now(),
         Date.now(),
       ]
     );
