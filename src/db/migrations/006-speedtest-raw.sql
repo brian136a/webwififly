@@ -6,7 +6,6 @@ ALTER TABLE speed_tests ADD COLUMN raw_ul_bytes INTEGER NULL;
 ALTER TABLE speed_tests ADD COLUMN duration_ms INTEGER NULL;
 ALTER TABLE speed_tests ADD COLUMN anomaly BOOLEAN DEFAULT 0;
 ALTER TABLE speed_tests ADD COLUMN display_dl_mbps REAL NULL;
-ALTER TABLE speed_tests ADD COLUMN created_at_ms INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000);
+ALTER TABLE speed_tests ADD COLUMN created_at_ms INTEGER NOT NULL DEFAULT 0;
 
--- Verify schema
-SELECT name FROM pragma_table_info('speed_tests');
+-- Note: created_at_ms will be set by application to current timestamp on insert
