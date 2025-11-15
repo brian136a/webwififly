@@ -320,7 +320,10 @@ export const isSetupValid = (
 
 import { z } from 'zod';
 
-export const sessionSchema = z.object({});
+export const sessionSchema = z.object({
+  sessionId: z.string().uuid(),
+  createdAt: z.number().int(),
+});
 
 export const setupSchema = z.object({
   sessionId: z.string().uuid(),
