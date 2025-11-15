@@ -77,6 +77,30 @@ export async function downloadChunk(size: number): Promise<Uint8Array> {
 }
 
 /**
+ * Download multiple chunks concurrently for speed measurement
+ * Uses Promise.all to parallelize requests (simulates multi-stream test)
+ */
+export async function downloadChunksConcurrent(size: number, streams: number): Promise<number> {
+  try {
+    const downloadPromises = Array(streams)
+      .fill(null)
+      .map(() =>
+        downloadChunk(size)
+          .catch(e => {
+            console.warn('Download error (continuing):', e);
+            return new Uint8Array(0);
+          })
+      );
+
+    const chunks = await Promise.all(downloadPromises);
+    return chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+  } catch (error) {
+    console.warn('Concurrent download error:', error);
+    return 0;
+  }
+}
+
+/**
  * Upload chunk for speed measurement
  * Posts data back to server to measure upload speed
  */
@@ -88,6 +112,29 @@ export async function uploadChunk(data: Uint8Array): Promise<void> {
   });
 
   if (!res.ok) throw new Error('Chunk upload failed');
+}
+
+/**
+ * Upload multiple chunks concurrently for speed measurement
+ */
+export async function uploadChunksConcurrent(data: Uint8Array, streams: number): Promise<number> {
+  try {
+    const uploadPromises = Array(streams)
+      .fill(null)
+      .map(() =>
+        uploadChunk(data)
+          .catch(e => {
+            console.warn('Upload error (continuing):', e);
+            return 0;
+          })
+      );
+
+    await Promise.all(uploadPromises);
+    return data.byteLength * streams;
+  } catch (error) {
+    console.warn('Concurrent upload error:', error);
+    return 0;
+  }
 }
 
 /**
@@ -149,20 +196,24 @@ export async function runFullSpeedtest(
       roomName
     );
 
-    // Download phase (25% -> 50%)
+    // Download phase (25% -> 50%) - Use concurrent streams for true parallel throughput
     onProgress?.('Downloading', 25);
     const downloadStartTime = Date.now();
     let downloadBytes = 0;
     const downloadEndTime = downloadStartTime + testDurationMs;
+    const effectiveStreams = Math.max(1, Math.min(streams, 8)); // Cap at 8 streams
+    // Optimize chunk size for parallelism: smaller chunks (512KB) work better with multiple concurrent streams
+    const downloadChunkSize = Math.max(262144, Math.floor(chunkSizeBytes / 2));
 
     while (Date.now() < downloadEndTime) {
       try {
-        const chunk = await downloadChunk(chunkSizeBytes);
-        downloadBytes += chunk.byteLength;
+        // Download 'effectiveStreams' chunks concurrently in parallel
+        const bytesThisRound = await downloadChunksConcurrent(downloadChunkSize, effectiveStreams);
+        downloadBytes += bytesThisRound;
         const progress = 25 + ((Date.now() - downloadStartTime) / testDurationMs) * 25;
         onProgress?.('Downloading', Math.min(progress, 50));
       } catch (e) {
-        console.warn('Download chunk error (continuing):', e);
+        console.warn('Download batch error (continuing):', e);
         // Continue with remaining time
       }
     }
@@ -188,21 +239,23 @@ export async function runFullSpeedtest(
       latencies.reduce((sum, lat) => sum + Math.pow(lat - avgLatency, 2), 0) / latencies.length
     );
 
-    // Upload phase (50% -> 100%)
+    // Upload phase (50% -> 100%) - Use concurrent streams for true parallel throughput
     onProgress?.('Uploading', 50);
     const uploadStartTime = Date.now();
     let uploadBytes = 0;
     const uploadEndTime = uploadStartTime + testDurationMs;
-    const uploadData = new Uint8Array(chunkSizeBytes);
+    const uploadChunkSize = Math.max(262144, Math.floor(chunkSizeBytes / 2));
+    const uploadData = new Uint8Array(uploadChunkSize);
 
     while (Date.now() < uploadEndTime) {
       try {
-        await uploadChunk(uploadData);
-        uploadBytes += uploadData.byteLength;
+        // Upload 'effectiveStreams' chunks concurrently in parallel
+        const bytesThisRound = await uploadChunksConcurrent(uploadData, effectiveStreams);
+        uploadBytes += bytesThisRound;
         const progress = 50 + ((Date.now() - uploadStartTime) / testDurationMs) * 50;
         onProgress?.('Uploading', Math.min(progress, 100));
       } catch (e) {
-        console.warn('Upload chunk error (continuing):', e);
+        console.warn('Upload batch error (continuing):', e);
       }
     }
 

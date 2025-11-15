@@ -100,6 +100,10 @@ export async function POST(req: NextRequest) {
       {
         ok: true,
         recordId: recordId.lastID,
+        dl: validated.downloadMbps,
+        ul: validated.uploadMbps,
+        ping: validated.pingMs,
+        jitter: validated.jitterMs,
         anomaly: anomalyCheck.isAnomaly,
         displayDlMbps: anomalyCheck.displayDlMbps,
         displayUlMbps: anomalyCheck.displayUlMbps,

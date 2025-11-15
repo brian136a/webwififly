@@ -3,13 +3,32 @@ import { z } from 'zod';
 
 const CHUNK_SIZE = parseInt(process.env.CHUNK_SIZE_BYTES || '1048576', 10);
 
+// Pre-generated deterministic buffer cache for reuse
+// Avoids regenerating random data on every request
+const BUFFER_CACHE: Map<number, Buffer> = new Map();
+
 // Generate pseudo-random chunk data for download tests
+// Uses a pre-cached approach to minimize CPU overhead
 function generateChunk(size: number): Buffer {
-  // Use a deterministic but non-compressible pattern
-  const chunk = Buffer.alloc(size);
-  for (let i = 0; i < size; i++) {
-    chunk[i] = Math.floor(Math.random() * 256);
+  // Check cache first
+  if (BUFFER_CACHE.has(size)) {
+    return BUFFER_CACHE.get(size)!;
   }
+
+  // Use deterministic pattern with minimal CPU cost: repeating patterns
+  const chunk = Buffer.alloc(size);
+  const pattern = Buffer.from([0x42, 0x84, 0xC6, 0x08, 0x4A, 0x8C, 0xCE, 0x10]);
+  
+  // Fill buffer with pattern (much faster than random)
+  for (let i = 0; i < size; i++) {
+    chunk[i] = pattern[i % pattern.length];
+  }
+
+  // Cache for future reuse (limit cache size to 10 entries)
+  if (BUFFER_CACHE.size < 10) {
+    BUFFER_CACHE.set(size, chunk);
+  }
+
   return chunk;
 }
 
@@ -53,7 +72,8 @@ export async function GET(req: NextRequest) {
             'Content-Length': String(slicedChunk.length),
             'Content-Range': `bytes ${start}-${end}/${size}`,
             'Accept-Ranges': 'bytes',
-            'Cache-Control': 'no-cache',
+            'Cache-Control': 'no-cache, no-store',
+            'Connection': 'keep-alive',
           },
         });
       }
@@ -65,7 +85,9 @@ export async function GET(req: NextRequest) {
         'Content-Type': 'application/octet-stream',
         'Content-Length': String(chunk.length),
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store',
+        'Transfer-Encoding': 'binary',
+        'Connection': 'keep-alive',
       },
     });
   } catch (error) {
