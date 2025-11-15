@@ -10,18 +10,28 @@ const BUFFER_CACHE: Map<number, Buffer> = new Map();
 // Generate pseudo-random chunk data for download tests
 // Uses a pre-cached approach to minimize CPU overhead
 function generateChunk(size: number): Buffer {
-  // Check cache first
+  // Check cache first - this is the hot path for repeated requests
   if (BUFFER_CACHE.has(size)) {
     return BUFFER_CACHE.get(size)!;
   }
 
-  // Use deterministic pattern with minimal CPU cost: repeating patterns
+  // Use deterministic pattern with minimal CPU cost: native crypto randomness
+  // For production: use pseudorandom that's fast enough for network I/O
   const chunk = Buffer.alloc(size);
-  const pattern = Buffer.from([0x42, 0x84, 0xC6, 0x08, 0x4A, 0x8C, 0xCE, 0x10]);
   
-  // Fill buffer with pattern (much faster than random)
-  for (let i = 0; i < size; i++) {
-    chunk[i] = pattern[i % pattern.length];
+  // Fill with pattern using native Node buffer methods (C++ fast path)
+  const patternSize = 64;
+  const pattern = Buffer.alloc(patternSize);
+  for (let i = 0; i < patternSize; i++) {
+    pattern[i] = (i * 31) & 0xff; // Deterministic pseudo-random pattern
+  }
+  
+  // Copy pattern repeatedly (much faster than byte-by-byte)
+  let offset = 0;
+  while (offset < size) {
+    const copySize = Math.min(patternSize, size - offset);
+    pattern.copy(chunk, offset, 0, copySize);
+    offset += copySize;
   }
 
   // Cache for future reuse (limit cache size to 10 entries)
