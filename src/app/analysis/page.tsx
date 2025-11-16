@@ -739,7 +739,7 @@ export default function AnalysisPage() {
                 Why is my speed slower in some rooms?
               </summary>
               <p className="text-gray-400 mt-2 ml-4 text-xs sm:text-sm">
-                WiFi weakens as you get farther from the router and through walls/obstacles. Placement matters more than modem power.
+                WiFi weakens as you get farther from the router and through walls/obstacles. Placement matters more than modem power. Speeds around 5–10 Mbps will still support basic browsing and email, but may struggle with HD video, large downloads, or multiple active devices.
               </p>
             </details>
 
