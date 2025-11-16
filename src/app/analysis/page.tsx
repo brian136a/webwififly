@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -65,6 +65,207 @@ function getImprovementConfidence(dl: number, variance: number): 'Low' | 'Modera
   return 'Low';
 }
 
+// Component A: Quick Diagnosis Teaser
+function QuickDiagnosisTeaser() {
+  const [isTeaserDismissed, setIsTeaserDismissed] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('advanced_teaser_dismissed_v1');
+    if (dismissed) {
+      setIsTeaserDismissed(true);
+    }
+  }, []);
+
+  const handleDismiss = () => {
+    localStorage.setItem('advanced_teaser_dismissed_v1', 'true');
+    setIsTeaserDismissed(true);
+  };
+
+  if (isTeaserDismissed) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white/6 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6"
+    >
+      <div className="flex items-start gap-4">
+        <div className="text-cyan-400 mt-1">ℹ️</div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold mb-2">What's Limiting Your Speed?</h3>
+          <p className="text-sm text-gray-300 mb-4">
+            This page shows <strong>WHAT</strong> you're getting. Our advanced analysis shows <strong>WHY</strong>.
+          </p>
+          <p className="text-xs text-gray-400 mb-4">
+            Three common culprits: WiFi placement & interference • ISP line quality • Hardware age
+          </p>
+          <a href="#micro-form" className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 font-medium transition">
+            Show My Top 3 Bottlenecks → 
+          </a>
+        </div>
+        <button
+          onClick={handleDismiss}
+          className="text-gray-400 hover:text-white transition shrink-0"
+        >
+          ✕
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// Component B: Room Diagnostics Preview
+interface RoomDiagnosticsPreviewProps {
+  worstRoom: AnalysisData | null;
+}
+
+function RoomDiagnosticsPreview({ worstRoom }: RoomDiagnosticsPreviewProps) {
+  if (!worstRoom) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="bg-white/6 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold text-cyan-400 mb-1">Worst Room Diagnosis (Preview)</h3>
+          <p className="text-sm text-gray-300">{worstRoom.room}</p>
+        </div>
+      </div>
+
+      <div className="space-y-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white/5 rounded p-3">
+            <p className="text-xs text-gray-400">Download</p>
+            <p className="text-lg font-bold">{worstRoom.dlDisplay} Mbps</p>
+          </div>
+          <div className="bg-white/5 rounded p-3">
+            <p className="text-xs text-gray-400">% of Plan</p>
+            <p className="text-lg font-bold">{worstRoom.dlPercent}%</p>
+          </div>
+          <div className="bg-white/5 rounded p-3">
+            <p className="text-xs text-gray-400">Ping</p>
+            <p className="text-lg font-bold">{worstRoom.ping}ms</p>
+          </div>
+          <div className="bg-white/5 rounded p-3">
+            <p className="text-xs text-gray-400">Jitter</p>
+            <p className="text-lg font-bold">{worstRoom.jitter}ms</p>
+          </div>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+          <p className="text-xs text-gray-500 mb-2">PRIMARY BOTTLENECK</p>
+          <div className="bg-gray-900/50 rounded px-3 py-2 blur-sm inline-block">
+            <p className="text-sm text-gray-500">[Requires Advanced Analysis]</p>
+          </div>
+          <p className="text-xs text-cyan-400 mt-2">See this detail free →</p>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+          <p className="text-xs text-gray-500 mb-2">RECOMMENDED FIX</p>
+          <div className="bg-gray-900/50 rounded px-3 py-2 blur-sm inline-block">
+            <p className="text-sm text-gray-500">[Requires Advanced Analysis]</p>
+          </div>
+          <p className="text-xs text-cyan-400 mt-2">Unlock for free →</p>
+        </div>
+      </div>
+
+      <a
+        href="#micro-form"
+        className="inline-flex items-center gap-2 text-sm font-medium bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition-colors"
+      >
+        Unlock My Free Advanced Diagnostics →
+      </a>
+    </motion.div>
+  );
+}
+
+// Component C: Costed Solutions Transparent
+function CostedSolutionsTransparent() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      <div className="bg-white/10 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-6 sm:p-8">
+        <h3 className="text-2xl font-bold mb-2">✅ Your Top 3 Bottlenecks Identified</h3>
+        <p className="text-gray-300 mb-6">
+          Check your email for the full diagnostic report. Here's your improvement roadmap:
+        </p>
+
+        {/* Improvement Roadmap */}
+        <div className="space-y-4">
+          {/* Step 1: Free */}
+          <div className="bg-white/5 border border-green-500/30 rounded-lg p-4">
+            <div className="flex items-start gap-3 mb-2">
+              <div className="bg-green-500/20 text-green-400 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shrink-0">1</div>
+              <div className="flex-1">
+                <p className="font-semibold text-green-300">Step 1: Review Full Diagnostic Report</p>
+                <p className="text-xs text-gray-400 mt-1">FREE • Check your email (arrive in next 5 min)</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 ml-11">Detailed analysis of your WiFi performance across all rooms with specific bottleneck identifications.</p>
+          </div>
+
+          {/* Step 2: Free */}
+          <div className="bg-white/5 border border-blue-500/30 rounded-lg p-4">
+            <div className="flex items-start gap-3 mb-2">
+              <div className="bg-blue-500/20 text-blue-400 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shrink-0">2</div>
+              <div className="flex-1">
+                <p className="font-semibold text-blue-300">Step 2: Self-Fix Guide (No Cost)</p>
+                <p className="text-xs text-gray-400 mt-1">FREE • Included in your diagnostic report</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 ml-11">Simple, actionable steps you can try right now: Restart modem, check WiFi channel, test wired connection, etc.</p>
+            <div className="mt-3 ml-11 text-xs text-cyan-300">💡 Many users solve their issue with Step 2 alone.</div>
+          </div>
+
+          {/* Step 3: Optional/Costed */}
+          <div className="bg-white/5 border border-orange-500/30 rounded-lg p-4">
+            <div className="flex items-start gap-3 mb-2">
+              <div className="bg-orange-500/20 text-orange-400 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shrink-0">3</div>
+              <div className="flex-1">
+                <p className="font-semibold text-orange-300">Step 3: Professional Solutions (Optional)</p>
+                <p className="text-xs text-gray-400 mt-1">COSTED • Only if you need hands-on help</p>
+              </div>
+            </div>
+            <div className="space-y-3 ml-11 mt-3">
+              <div className="bg-gray-900/50 rounded p-3 text-sm">
+                <p className="font-medium mb-1">🛜 Mesh Node Upgrade</p>
+                <p className="text-xs text-gray-400">$250-600 NZD • Recommended if your worst room is &gt;15m from router</p>
+              </div>
+              <div className="bg-gray-900/50 rounded p-3 text-sm">
+                <p className="font-medium mb-1 flex items-center gap-2">
+                  👨‍💻 Expert Consultation
+                  <span className="text-xs bg-orange-500/30 text-orange-300 px-2 py-0.5 rounded">Limited Availability</span>
+                </p>
+                <p className="text-xs text-gray-400">$80 • 1-hour video call with WiFi specialist to design custom solution</p>
+              </div>
+              <div className="bg-gray-900/50 rounded p-3 text-sm">
+                <p className="font-medium mb-1">🔧 Professional Wiring Check</p>
+                <p className="text-xs text-gray-400">$150 • Technician visit to inspect cables, placement, and interference</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+          <p className="text-sm text-cyan-300">
+            ℹ️ <strong>No hidden costs.</strong> All pricing is transparent upfront. Start with Steps 1 & 2 (both free) and decide if you want professional help.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function AnalysisPage() {
   const router = useRouter();
   const { testResults, downloadSpeed, cost } = useSetupStore();
@@ -77,9 +278,7 @@ export default function AnalysisPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    photoFile: null as File | null,
   });
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -140,68 +339,6 @@ export default function AnalysisPage() {
   const ulData = [...analysisData].sort((a, b) => b.ul - a.ul);
   const pingData = [...analysisData].sort((a, b) => a.ping - b.ping);
   const jitterData = [...analysisData].sort((a, b) => a.jitter - b.jitter);
-
-  const handlePhotoCapture = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setFormData(prev => ({ ...prev, photoFile: e.target.files![0] }));
-    }
-  };
-
-  const handleSubmitForm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate
-    if (!formData.name.trim() || !formData.email.trim()) {
-      alert('Please fill in name and email');
-      return;
-    }
-    
-    if (!formData.email.includes('@')) {
-      alert('Please enter a valid email');
-      return;
-    }
-
-    setSubmitting(true);
-    
-    try {
-      // Prepare form data with file upload if present
-      const submitData = new FormData();
-      submitData.append('name', formData.name);
-      submitData.append('email', formData.email);
-      
-      if (formData.photoFile) {
-        submitData.append('photo', formData.photoFile);
-      }
-
-      // Get session ID from localStorage
-      const sessionId = localStorage.getItem('wififly_sessionId') || '';
-
-      // Submit to new submissions endpoint
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        body: submitData,
-        headers: {
-          'X-Session-ID': sessionId,
-        },
-      });
-
-      if (response.ok) {
-        setSubmitted(true);
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to submit');
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-      alert('Failed to submit. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const MetricsEducationSection = () => (
     <motion.div
@@ -606,7 +743,13 @@ export default function AnalysisPage() {
           )}
         </motion.div>
 
-        {/* ===== H. SOFT CTA: WANT TO KNOW WHY? ===== */}
+        {/* ===== G-PLUS. ROOM DIAGNOSTICS PREVIEW ===== */}
+        <RoomDiagnosticsPreview worstRoom={worstRoom} />
+
+        {/* ===== H. QUICK DIAGNOSIS TEASER ===== */}
+        <QuickDiagnosisTeaser />
+
+        {/* ===== I. SOFT CTA: WANT TO KNOW WHY? ===== */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -616,107 +759,77 @@ export default function AnalysisPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold">Want to know what's causing low speeds?</h3>
-              <p className="text-sm text-gray-300">We show the facts here — if you'd like a deeper diagnosis (equipment, setup, wiring or ISP), our team can investigate.</p>
+              <p className="text-sm text-gray-300">This page shows your results. Our free advanced analysis tells you WHY.</p>
             </div>
             <div className="sm:shrink-0">
-              <a href="#contact-form" className="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium">Get Help Understanding Your Results</a>
+              <a href="#micro-form" className="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium">Get My Bottlenecks →</a>
             </div>
           </div>
         </motion.div>
 
-        {/* ===== H. PERSONALISED IMPROVEMENT CTA FORM ===== */}
-        <motion.div id="contact-form"
+        {/* ===== H. MICRO-COMMITMENT FORM ===== */}
+        <motion.div id="micro-form"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-linear-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-6 sm:p-8 mb-8"
+          className="mb-8"
         >
-          <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Get Help Understanding Your Results</h2>
-            <p className="text-sm text-gray-300">
-              If you'd like us to investigate further and explain what's causing your speeds, share a few details and our team will help diagnose the issue.
-            </p>
-          </div>
-
           {submitted ? (
-            <div className="text-center py-8">
-              <div className="mb-4">
-                <CheckCircle className="w-12 h-12 text-green-400 mx-auto" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">Thanks! Your plan is coming.</h3>
-              <p className="text-sm text-gray-400">
-                We'll email you a custom WiFi upgrade recommendation based on your results and home setup.
-              </p>
-              <button
-                onClick={() => setSubmitted(false)}
-                className="mt-4 text-sm px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-              >
-                Back to Results
-              </button>
-            </div>
+            <CostedSolutionsTransparent />
           ) : (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setSubmitting(true);
-                // Simulate form submission
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                setSubmitted(true);
-                setSubmitting(false);
-              }}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Your Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    placeholder="e.g., Alex"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="your@email.com"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
+            <div className="bg-white/10 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-6 sm:p-8">
+              <div className="mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold mb-2">Get Your Top 3 Speed Bottlenecks</h2>
+                <p className="text-sm text-gray-300">
+                  In 2 minutes, we'll email you the specific issues limiting your speed (+ free fixes to try yourself).
+                </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Modem Photo (Optional)</label>
-                <button
-                  type="button"
-                  onClick={handlePhotoCapture}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:border-cyan-500 transition"
-                >
-                  {formData.photoFile ? `📷 ${formData.photoFile.name}` : '📷 Upload Modem Photo'}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoSelect}
-                  className="hidden"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all"
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setSubmitting(true);
+                  // Simulate form submission
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  setSubmitted(true);
+                  setSubmitting(false);
+                }}
+                className="space-y-4"
               >
-                {submitting ? 'Sending...' : 'Get Expert Help →'}
-              </button>
-            </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Your Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="e.g., Alex"
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      placeholder="your@email.com"
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all"
+                >
+                  {submitting ? 'Sending...' : 'Email My Top 3 Speed Bottlenecks (FREE) →'}
+                </button>
+              </form>
+            </div>
           )}
         </motion.div>
 
