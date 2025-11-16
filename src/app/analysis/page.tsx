@@ -48,19 +48,14 @@ interface ImprovementPotential {
 
 // Helper: Generate room verdict based on performance
 function getRoomVerdict(dl: number, dlPercent: number, worstDl: number, bestDl: number, hasAnomaly: boolean): string {
-  if (hasAnomaly) return "Test value anomaly detected";
+  if (hasAnomaly) return 'Anomalous';
 
-  // Use percent-of-plan thresholds so verdicts reflect how close the room is to the user's plan.
-  // Tiers: >=80% = Excellent, >=50% = OK, >=25% = Weak, <25% = Very weak.
-  if (dlPercent >= 80) {
-    return `Excellent — Very close to plan, ${dl} Mbps (${dlPercent}% of plan)`;
-  } else if (dlPercent >= 50) {
-    return `OK — Acceptable for basic use, ${dl} Mbps (${dlPercent}% of plan)`;
-  } else if (dlPercent >= 25) {
-    return `Weak — Consider improving placement or adding a node, ${dl} Mbps (${dlPercent}% of plan)`;
-  } else {
-    return `Very weak — Action recommended: check placement or wiring, ${dl} Mbps (${dlPercent}% of plan)`;
-  }
+  // Five single-word tiers in 20% increments (0-19,20-39,40-59,60-79,80-100).
+  if (dlPercent >= 80) return 'Excellent';
+  if (dlPercent >= 60) return 'Good';
+  if (dlPercent >= 40) return 'Fair';
+  if (dlPercent >= 20) return 'Poor';
+  return 'Terrible';
 }
 
 // Helper: Determine improvement confidence
@@ -305,11 +300,12 @@ export default function AnalysisPage() {
                   <h3 className="font-semibold text-sm sm:text-base">{room.room}</h3>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                     room.dlPercent >= 80 ? 'bg-green-500/30 text-green-300' :
-                    room.dlPercent >= 50 ? 'bg-blue-500/30 text-blue-300' :
-                    room.dlPercent >= 25 ? 'bg-orange-500/30 text-orange-300' :
+                    room.dlPercent >= 60 ? 'bg-teal-500/30 text-teal-300' :
+                    room.dlPercent >= 40 ? 'bg-yellow-500/30 text-yellow-300' :
+                    room.dlPercent >= 20 ? 'bg-orange-500/30 text-orange-300' :
                     'bg-red-600/30 text-red-300'
                   }`}>
-                    {room.dlPercent >= 80 ? 'Excellent' : room.dlPercent >= 50 ? 'OK' : room.dlPercent >= 25 ? 'Weak' : 'Very weak'}
+                    {room.dlPercent >= 80 ? 'Excellent' : room.dlPercent >= 60 ? 'Good' : room.dlPercent >= 40 ? 'Fair' : room.dlPercent >= 20 ? 'Poor' : 'Terrible'}
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-gray-300 mb-3">
