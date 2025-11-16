@@ -53,13 +53,13 @@ function getRoomVerdict(dl: number, dlPercent: number, worstDl: number, bestDl: 
   const perfRatio = bestDl > 0 ? dl / bestDl : 1;
   
   if (dl >= 100) {
-    return `Strong connection — with WiFiFly's solution it could be ~2× faster and much stronger in distant rooms.`;
+    return `Strong — ${dl} Mbps (${dlPercent}% of plan)`;
   } else if (dl >= 50) {
-    return `Steady connection — good baseline; an extra access point or newer modem would noticeably improve coverage.`;
+    return `Steady — ${dl} Mbps (${dlPercent}% of plan)`;
   } else if (dl >= 20) {
-    return `Weak connection — clear improvement possible through better placement, a mesh node, or modem upgrade.`;
+    return `Weak — ${dl} Mbps (${dlPercent}% of plan)`;
   } else {
-    return `Very weak — high potential for dramatic improvement with tailored hardware and layout changes.`;
+    return `Very weak — ${dl} Mbps (${dlPercent}% of plan)`;
   }
 }
 
@@ -271,7 +271,7 @@ export default function AnalysisPage() {
           </p>
         </motion.div>
 
-        {/* ===== B. YOUR WIFI OVERVIEW ===== */}
+        {/* ===== B. YOUR SPEED VS YOUR PLAN (FACTS-FIRST) ===== */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -279,30 +279,27 @@ export default function AnalysisPage() {
           className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8"
         >
           <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Your WiFi Story</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Your Speed vs Your Plan</h2>
             <p className="text-gray-300 text-sm sm:text-base">
-              {bestRoom.dl > 100 
-                ? `Strong in ${bestRoom.room}; the ${worstRoom.room} shows the biggest potential for improvement.`
-                : `Your WiFi varies across rooms — we can help you improve signal where it matters most.`
-              } Most homes can be improved significantly — we'll show you the simplest, most cost-effective options.
+              Your plan advertises <strong>{ispPlanSpeed} Mbps</strong> download. Across the {analysisData.length} rooms we tested, your average download is <strong>{avgDL} Mbps</strong>, which is <strong>{Math.round((avgDL / ispPlanSpeed) * 100)}%</strong> of the advertised speed. Your best room measured <strong>{bestRoom.dl} Mbps</strong> and your weakest room measured <strong>{worstRoom.dl} Mbps</strong>.
             </p>
             {hasAnomalies && (
               <div className="mt-3 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
                 <p className="text-xs sm:text-sm text-yellow-300 flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>Some test values look unusual — we're showing adjusted visuals for clarity. Contact support if this seems wrong.</span>
+                  <span>Some test values look unusual — visuals have been adjusted for clarity. If numbers look incorrect, contact support for a deeper check.</span>
                 </p>
               </div>
             )}
           </div>
 
-          {/* Room verdict cards */}
+          {/* Room summary cards (concise factual view) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {analysisData.map((room) => (
               <motion.div
                 key={room.room}
                 whileHover={{ scale: 1.02 }}
-                className="bg-white/5 border border-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/10 transition-all"
+                className="bg-white/5 border border-white/10 rounded-lg p-4 transition-all"
               >
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-sm sm:text-base">{room.room}</h3>
@@ -314,106 +311,17 @@ export default function AnalysisPage() {
                     {room.dl >= 100 ? '💪 Strong' : room.dl >= 50 ? '👍 Steady' : '⚠️ Weak'}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 mb-3">
-                  {getRoomVerdict(room.dl, room.dlPercent, bestRoom.dl, worstRoom.dl, room.hasAnomaly)}
+                <p className="text-xs sm:text-sm text-gray-300 mb-3">
+                  {room.dlDisplay} Mbps • {room.dlPercent}% of plan
                 </p>
-                <p className="text-xs text-gray-400">{room.dlDisplay} Mbps download</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* ===== C. WHAT THIS MEANS FOR YOU ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8"
-        >
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">What This Means For You</h2>
-          <div className="space-y-3 text-sm sm:text-base text-gray-300">
-            {avgDL > 100 ? (
-              <>
-                <p>✅ <strong>Streaming & Video:</strong> HD streaming and video calls are smooth — no buffering.</p>
-                <p>✅ <strong>Gaming:</strong> Your ping is low enough for competitive gaming in most rooms.</p>
-                <p>⚡ <strong>Smart Home:</strong> All your devices can connect reliably.</p>
-              </>
-            ) : avgDL > 50 ? (
-              <>
-                <p>👍 <strong>Streaming & Video:</strong> HD streaming works well; video calls are smooth.</p>
-                <p>⚠️ <strong>Gaming:</strong> Casual gaming is fine; competitive play may lag in weak rooms.</p>
-                <p>💡 <strong>Opportunity:</strong> Adding an access point or mesh node could transform weak rooms.</p>
-              </>
-            ) : (
-              <>
-                <p>⚠️ <strong>Streaming & Video:</strong> Video calls may buffer in weak rooms; HD streaming challenging.</p>
-                <p>❌ <strong>Gaming:</strong> Gaming will be frustrating in distant rooms.</p>
-                <p>🚀 <strong>Opportunity:</strong> High potential for dramatic improvement with better modem placement or mesh setup.</p>
-              </>
-            )}
-          </div>
-
-          {/* Next steps */}
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <h3 className="font-semibold mb-3 text-sm sm:text-base">Next Steps</h3>
-            <ul className="space-y-2 text-xs sm:text-sm text-gray-300">
-              <li>✓ Try moving your modem to a central location (ideally high up).</li>
-              <li>✓ Retest in a few days to see if placement helps.</li>
-              <li>✓ If weak rooms persist, consider a mesh node or access point (we can advise).</li>
-            </ul>
-          </div>
-        </motion.div>
-
-        {/* ===== D. IMPROVEMENT POTENTIAL ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8"
-        >
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">Improvement Potential</h2>
-          <p className="text-xs sm:text-sm text-gray-400 mb-6">Based on your test, here's the realistic uplift we typically see with targeted improvements:</p>
-
-          <div className="space-y-4">
-            {analysisData.map((room) => {
-              const confidence = getImprovementConfidence(room.dl, variance);
-              let upliftText = '';
-              if (confidence === 'High') {
-                upliftText = room.dl < 30 ? '2×–5× improvement' : room.dl < 60 ? '1.5×–3× improvement' : '1.2×–2× improvement';
-              } else if (confidence === 'Moderate') {
-                upliftText = room.dl < 30 ? '1.5×–3× improvement' : room.dl < 60 ? '1.2×–2× improvement' : 'small improvement';
-              } else {
-                upliftText = 'stable — good optimization potential';
-              }
-
-              return (
-                <div key={room.room} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs sm:text-sm">
-                    <span className="font-medium">{room.room}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                      confidence === 'High' ? 'bg-green-500/30 text-green-300' :
-                      confidence === 'Moderate' ? 'bg-blue-500/30 text-blue-300' :
-                      'bg-gray-500/30 text-gray-300'
-                    }`}>
-                      {confidence} uplift potential
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-cyan-500 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(room.dlPercent, 100)}%` }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400 whitespace-nowrap ml-1">{upliftText}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+        {/* NOTE: Removed generic "What This Means" and "Improvement Potential" sections in Phase 1.
+            Those narrative/diagnostic sections will be replaced with a concise facts-first flow
+            and a soft CTA to request deeper analysis. */}
 
         {/* ===== E. KEY METRICS & INLINE EXPLANATIONS ===== */}
         <MetricsEducationSection />
@@ -704,17 +612,35 @@ export default function AnalysisPage() {
           )}
         </motion.div>
 
-        {/* ===== H. PERSONALISED IMPROVEMENT CTA FORM ===== */}
+        {/* ===== H. SOFT CTA: WANT TO KNOW WHY? ===== */}
         <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-white/6 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold">Want to know what's causing low speeds?</h3>
+              <p className="text-sm text-gray-300">We show the facts here — if you'd like a deeper diagnosis (equipment, setup, wiring or ISP), our team can investigate.</p>
+            </div>
+            <div className="sm:shrink-0">
+              <a href="#contact-form" className="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium">Get Help Understanding Your Results</a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ===== H. PERSONALISED IMPROVEMENT CTA FORM ===== */}
+        <motion.div id="contact-form"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="bg-linear-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-6 sm:p-8 mb-8"
         >
           <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Get Your Custom WiFi Upgrade Plan</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Get Help Understanding Your Results</h2>
             <p className="text-sm text-gray-300">
-              Based on your test results, we can recommend exactly which hardware and placement changes will transform your WiFi. Share a few details and we'll create a personalized plan.
+              If you'd like us to investigate further and explain what's causing your speeds, share a few details and our team will help diagnose the issue.
             </p>
           </div>
 
@@ -794,7 +720,7 @@ export default function AnalysisPage() {
                 disabled={submitting}
                 className="w-full bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all"
               >
-                {submitting ? 'Sending...' : 'Send & Get Support →'}
+                {submitting ? 'Sending...' : 'Get Expert Help →'}
               </button>
             </form>
           )}
@@ -882,199 +808,7 @@ export default function AnalysisPage() {
           </button>
         </motion.div>
 
-        {/* Plan Investment Section */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">Download Speed</h2>
-              <p className="text-gray-300 text-sm">
-                How fast you can pull content from the internet
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={dlData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis
-                  dataKey="room"
-                  stroke="rgba(255,255,255,0.6)"
-                  style={{ fontSize: '12px' }}
-                />
-                <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'Mbps', angle: -90, position: 'insideLeft' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(0,217,255,0.5)',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [`${value} Mbps`, 'Download']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="dl"
-                  stroke="#00D9FF"
-                  strokeWidth={3}
-                  dot={{ fill: '#00D9FF', r: 6 }}
-                  isAnimationActive={true}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Upload Speed Graph */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">Upload Speed</h2>
-              <p className="text-gray-300 text-sm">
-                How fast you can send content to the internet
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={ulData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis
-                  dataKey="room"
-                  stroke="rgba(255,255,255,0.6)"
-                  style={{ fontSize: '12px' }}
-                />
-                <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'Mbps', angle: -90, position: 'insideLeft' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(0,217,255,0.5)',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [`${value} Mbps`, 'Upload']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="ul"
-                  stroke="#00B8D4"
-                  strokeWidth={3}
-                  dot={{ fill: '#00B8D4', r: 6 }}
-                  isAnimationActive={true}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Ping Graph */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">Ping (Response Time)</h2>
-              <p className="text-gray-300 text-sm">
-                How quickly your device talks to the internet (lower is better)
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={pingData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis
-                  dataKey="room"
-                  stroke="rgba(255,255,255,0.6)"
-                  style={{ fontSize: '12px' }}
-                />
-                <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'ms', angle: -90, position: 'insideLeft' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(0,217,255,0.5)',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [`${value} ms`, 'Ping']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="ping"
-                  stroke="#20C997"
-                  strokeWidth={3}
-                  dot={{ fill: '#20C997', r: 6 }}
-                  isAnimationActive={true}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Jitter Graph */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">Jitter (Stability)</h2>
-              <p className="text-gray-300 text-sm">
-                How stable your connection is (lower is better)
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={jitterData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis
-                  dataKey="room"
-                  stroke="rgba(255,255,255,0.6)"
-                  style={{ fontSize: '12px' }}
-                />
-                <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'ms', angle: -90, position: 'insideLeft' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(0,217,255,0.5)',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value) => [`${value} ms`, 'Jitter']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="jitter"
-                  stroke="#8B5CF6"
-                  strokeWidth={3}
-                  dot={{ fill: '#8B5CF6', r: 6 }}
-                  isAnimationActive={true}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-        {/* Plan Investment Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8"
-        >
-          <h2 className="text-xl sm:text-2xl font-bold mb-6">Your Plan Investment</h2>
-
-          {/* Plan Overview */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 pb-8 border-b border-white/10">
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm mb-1">Monthly Cost</p>
-              <p className="text-2xl sm:text-3xl font-bold text-cyan-400">${cost?.toFixed(2) || '0.00'}</p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm mb-1">Advertised Download</p>
-              <p className="text-2xl sm:text-3xl font-bold text-cyan-400">{ispPlanSpeed} Mbps</p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm mb-1">Average Actual</p>
-              <p className="text-2xl sm:text-3xl font-bold text-cyan-400">{avgDL} Mbps</p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm mb-1">% of Plan</p>
-              <p className="text-2xl sm:text-3xl font-bold text-cyan-400">{Math.round((avgDL / ispPlanSpeed) * 100)}%</p>
-            </div>
-          </div>
-
-          <p className="text-xs sm:text-sm text-gray-400">
-            You're paying <strong>${cost?.toFixed(2) || '0.00'}/month</strong> for {ispPlanSpeed} Mbps down. Improving weak rooms will help you get your money's worth.
-          </p>
-        </motion.div>
+        {/* Removed duplicated graphs and plan-investment block to keep facts-first flow and reduce page weight. */}
       </div>
     </div>
   );
