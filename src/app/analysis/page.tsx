@@ -49,17 +49,17 @@ interface ImprovementPotential {
 // Helper: Generate room verdict based on performance
 function getRoomVerdict(dl: number, dlPercent: number, worstDl: number, bestDl: number, hasAnomaly: boolean): string {
   if (hasAnomaly) return "Test value anomaly detected";
-  
-  const perfRatio = bestDl > 0 ? dl / bestDl : 1;
-  
-  if (dl >= 100) {
-    return `Strong — ${dl} Mbps (${dlPercent}% of plan)`;
-  } else if (dl >= 50) {
-    return `Steady — ${dl} Mbps (${dlPercent}% of plan)`;
-  } else if (dl >= 20) {
-    return `Weak — ${dl} Mbps (${dlPercent}% of plan)`;
+
+  // Use percent-of-plan thresholds so verdicts reflect how close the room is to the user's plan.
+  // Tiers: >=80% = Excellent, >=50% = OK, >=25% = Weak, <25% = Very weak.
+  if (dlPercent >= 80) {
+    return `Excellent — Very close to plan, ${dl} Mbps (${dlPercent}% of plan)`;
+  } else if (dlPercent >= 50) {
+    return `OK — Acceptable for basic use, ${dl} Mbps (${dlPercent}% of plan)`;
+  } else if (dlPercent >= 25) {
+    return `Weak — Consider improving placement or adding a node, ${dl} Mbps (${dlPercent}% of plan)`;
   } else {
-    return `Very weak — ${dl} Mbps (${dlPercent}% of plan)`;
+    return `Very weak — Action recommended: check placement or wiring, ${dl} Mbps (${dlPercent}% of plan)`;
   }
 }
 
@@ -304,11 +304,12 @@ export default function AnalysisPage() {
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-sm sm:text-base">{room.room}</h3>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    room.dl >= 100 ? 'bg-green-500/30 text-green-300' :
-                    room.dl >= 50 ? 'bg-blue-500/30 text-blue-300' :
-                    'bg-orange-500/30 text-orange-300'
+                    room.dlPercent >= 80 ? 'bg-green-500/30 text-green-300' :
+                    room.dlPercent >= 50 ? 'bg-blue-500/30 text-blue-300' :
+                    room.dlPercent >= 25 ? 'bg-orange-500/30 text-orange-300' :
+                    'bg-red-600/30 text-red-300'
                   }`}>
-                    {room.dl >= 100 ? '💪 Strong' : room.dl >= 50 ? '👍 Steady' : '⚠️ Weak'}
+                    {room.dlPercent >= 80 ? 'Excellent' : room.dlPercent >= 50 ? 'OK' : room.dlPercent >= 25 ? 'Weak' : 'Very weak'}
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-gray-300 mb-3">
@@ -322,9 +323,6 @@ export default function AnalysisPage() {
         {/* NOTE: Removed generic "What This Means" and "Improvement Potential" sections in Phase 1.
             Those narrative/diagnostic sections will be replaced with a concise facts-first flow
             and a soft CTA to request deeper analysis. */}
-
-        {/* ===== E. KEY METRICS & INLINE EXPLANATIONS ===== */}
-        <MetricsEducationSection />
 
         {/* ===== F. VISUALS (TOGGLE SIMPLE/DETAILED) ===== */}
         <motion.div
@@ -727,6 +725,8 @@ export default function AnalysisPage() {
         </motion.div>
 
         {/* ===== I. EDUCATIONAL SIDEBAR / INLINE HELP ===== */}
+        <MetricsEducationSection />
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
