@@ -8,7 +8,7 @@ interface FooterProps {
   hideBack?: boolean;
 }
 
-export default function Footer({ hideBack: hideBackProp }: FooterProps = {}) {
+export default function Footer({ hideBack: hideBackProp }: FooterProps = { hideBack: undefined }) {
   const pathname = usePathname();
   // Hide back button on home page or when explicitly set
   const hideBack = hideBackProp !== undefined ? hideBackProp : pathname === '/';
