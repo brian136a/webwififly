@@ -1,13 +1,20 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 interface FooterProps {
   hideBack?: boolean;
 }
 
-export default function Footer({ hideBack = false }: FooterProps) {
+export default function Footer({ hideBack: hideBackProp }: FooterProps = {}) {
+  const pathname = usePathname();
+  // Hide back button on home page or when explicitly set
+  const hideBack = hideBackProp !== undefined ? hideBackProp : pathname === '/';
+  
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-gray-800/50 backdrop-blur-sm border-t border-gray-700/50">
+    <footer className="fixed bottom-0 left-0 right-0 bg-gray-800/50 backdrop-blur-sm border-t border-gray-700/50 z-30">
       <div className="container mx-auto px-4 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Left side - Back button or Copyright */}
