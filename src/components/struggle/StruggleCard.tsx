@@ -1,51 +1,28 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { IconType } from 'react-icons';
 
 interface StruggleCardProps {
   name: string;
   problem: string;
-  icon: LucideIcon;
+  icon: IconType;
 }
 
 export default function StruggleCard({ name, problem, icon: Icon }: StruggleCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
-      whileHover={{ scale: 1.05 }}
-      className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-6 cursor-pointer group overflow-hidden"
-    >
+    <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-6 cursor-pointer group overflow-hidden hover:scale-105 transition-transform duration-300">
       {/* Glow effect on hover */}
-      <motion.div
-        className="absolute inset-0 bg-linear-to-br from-cyan-500/0 to-cyan-500/0 group-hover:from-cyan-500/20 group-hover:to-cyan-500/10 rounded-lg"
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      />
+      <div className="absolute inset-0 bg-linear-to-br from-cyan-500/0 to-cyan-500/0 group-hover:from-cyan-500/20 group-hover:to-cyan-500/10 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
 
       {/* Border glow effect */}
-      <motion.div
-        className="absolute inset-0 border border-cyan-500/0 rounded-lg group-hover:border-cyan-500/50"
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      />
+      <div className="absolute inset-0 border border-cyan-500/0 rounded-lg group-hover:border-cyan-500/50 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
 
       {/* Content */}
       <div className="relative z-10">
         {/* Icon - fades in on hover */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          whileHover={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="mb-4"
-        >
+        <div className="mb-4 opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300">
           <Icon className="w-8 h-8 text-cyan-400" />
-        </motion.div>
+        </div>
 
         {/* Name */}
         <h3 className="text-lg font-semibold text-white mb-2">{name}</h3>
@@ -53,6 +30,6 @@ export default function StruggleCard({ name, problem, icon: Icon }: StruggleCard
         {/* Problem */}
         <p className="text-gray-300 text-sm">{problem}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }

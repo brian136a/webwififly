@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { MapPin, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { MdLocationOn, MdEmail, MdPhone, MdArrowBack } from 'react-icons/md';
 
 export default function ContactPage() {
   const router = useRouter();
@@ -38,7 +37,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24">
+    <div className="relative min-h-dvh flex items-center justify-center overflow-hidden pb-24">
       {/* Background with overlay */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-linear-to-br from-gray-900 via-blue-900 to-gray-900" />
@@ -48,30 +47,21 @@ export default function ContactPage() {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-4xl">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">Get In Touch</h1>
           <p className="text-gray-300 text-lg">
             Have questions about your WiFi speed? We&apos;re here to help.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Contact Information */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-8"
-          >
+          <div className="space-y-8">
             {/* Office Location */}
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
               <div className="flex items-start gap-4">
                 <div className="shrink-0">
-                  <MapPin className="w-6 h-6 text-cyan-400" />
+                  <MdLocationOn className="w-6 h-6 text-cyan-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Our Location</h3>
@@ -89,7 +79,7 @@ export default function ContactPage() {
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
               <div className="flex items-start gap-4">
                 <div className="shrink-0">
-                  <Mail className="w-6 h-6 text-cyan-400" />
+                  <MdEmail className="w-6 h-6 text-cyan-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Email</h3>
@@ -107,7 +97,7 @@ export default function ContactPage() {
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
               <div className="flex items-start gap-4">
                 <div className="shrink-0">
-                  <Phone className="w-6 h-6 text-cyan-400" />
+                  <MdPhone className="w-6 h-6 text-cyan-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Phone</h3>
@@ -120,27 +110,19 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8"
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8"
           >
             <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
 
             {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-12"
-              >
+              <div className="text-center py-12">
                 <div className="text-5xl mb-4">✓</div>
                 <p className="text-xl font-semibold text-green-400 mb-2">Message Sent!</p>
                 <p className="text-gray-300">We&apos;ll get back to you soon.</p>
-              </motion.div>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name */}
@@ -214,30 +196,25 @@ export default function ContactPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-300 mt-6"
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 min-h-11"
                 >
                   Send Message
                 </button>
               </form>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* Return to previous page */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mt-12"
-        >
+        <div className="text-center mt-12">
           <button
             onClick={goBack}
             className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <MdArrowBack className="w-4 h-4" />
             <span>Go Back</span>
           </button>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -112,9 +112,11 @@ export async function GET(req: NextRequest) {
 /**
  * POST /api/speedtest/chunk
  * Accepts uploaded chunk data for upload speed testing
+ * Returns timing information for accurate measurement
  */
 export async function POST(req: NextRequest) {
   try {
+    const receiveStart = Date.now();
     const contentLength = req.headers.get('content-length');
 
     if (!contentLength) {
@@ -128,6 +130,8 @@ export async function POST(req: NextRequest) {
 
     // Consume the request body (don't actually store it for speed tests)
     const buffer = await req.arrayBuffer();
+    const receiveEnd = Date.now();
+    const processingTimeMs = receiveEnd - receiveStart;
 
     if (buffer.byteLength !== bytes) {
       console.warn(
@@ -139,8 +143,16 @@ export async function POST(req: NextRequest) {
       {
         ok: true,
         bytesReceived: buffer.byteLength,
+        serverProcessingTimeMs: processingTimeMs,
+        serverTimestamp: receiveEnd,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-cache, no-store',
+          'Connection': 'keep-alive',
+        },
+      }
     );
   } catch (error) {
     console.error('[speedtest/chunk POST] Error:', error);

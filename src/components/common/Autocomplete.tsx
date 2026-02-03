@@ -6,7 +6,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { MdExpandMore } from 'react-icons/md';
 
 interface AutocompleteProps {
   value: string;
@@ -123,7 +123,7 @@ export default function Autocomplete({
           autoComplete="off"
         />
         {suggestions.length > 0 && isOpen && (
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <MdExpandMore className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         )}
       </div>
 

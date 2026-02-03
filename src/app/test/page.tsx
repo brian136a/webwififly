@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Loader } from 'lucide-react';
+import { MdError, MdLoop } from 'react-icons/md';
 import { useSetupStore } from '@/store/setupStore';
 import {
   getSpeedtestConfig,
@@ -21,6 +20,7 @@ interface DashboardResult {
   ping: number;
   jitter: number;
   anomaly?: boolean;
+  isModemTest?: boolean;
 }
 
 export default function TestPage() {
@@ -95,10 +95,11 @@ export default function TestPage() {
       const sessionId = localStorage.getItem('wififly_sessionId') || 'unknown';
 
       // Run the full speedtest
+      const isModemTest = currentRoom === modemRoom;
       const result = await runFullSpeedtest(sessionId, currentRoom, config, (state, pct) => {
         setProgressText(state);
         setProgress(pct);
-      });
+      }, isModemTest);
 
       // Add to store
       addTestResult({
@@ -118,6 +119,7 @@ export default function TestPage() {
             ping: result.ping,
             jitter: result.jitter,
             anomaly: result.anomaly,
+            isModemTest,
           },
         ];
         return updated.sort((a, b) => b.dl - a.dl);
@@ -166,7 +168,7 @@ export default function TestPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col text-white p-4 pb-24 pt-20">
+    <div className="relative min-h-dvh flex flex-col text-white p-4 pb-24 pt-20">
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-linear-to-br from-gray-900 via-blue-900 to-gray-900" />
         <div className="absolute inset-0 bg-black/50" />
@@ -175,31 +177,19 @@ export default function TestPage() {
       <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col flex-1 gap-8">
         {/* Error & Warning Banners */}
         {(error || configError) && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-4 bg-red-500/20 border border-red-500 rounded-lg text-center"
-          >
+          <div className="p-4 bg-red-500/20 border border-red-500 rounded-lg text-center">
             <p className="text-red-400 font-semibold text-sm">{error || configError}</p>
-          </motion.div>
+          </div>
         )}
 
         {isPageBackground && testState === 'testing' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-4 bg-yellow-500/20 border border-yellow-500 rounded-lg text-center"
-          >
+          <div className="p-4 bg-yellow-500/20 border border-yellow-500 rounded-lg text-center">
             <p className="text-yellow-400 font-semibold text-sm">⚠️ Tab is in background - test paused</p>
-          </motion.div>
+          </div>
         )}
 
         {/* Header & Status */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             {testState === 'finished'
               ? 'Test Complete!'
@@ -207,113 +197,109 @@ export default function TestPage() {
               ? `Testing ${currentRoom}`
               : `Ready to Test ${currentRoom}`}
           </h1>
-          <p className="text-md text-gray-300">
+          <p className="text-md text-gray-300 mb-1">
             Room {roomNumber} of {totalRooms}
           </p>
-        </motion.div>
+          {currentRoom === modemRoom && (
+            <p className="text-sm text-cyan-400 font-medium">
+              📡 Modem Location - Full Test (includes ping, jitter & upload)
+            </p>
+          )}
+          {currentRoom !== modemRoom && modemRoom && (
+            <p className="text-sm text-blue-400">
+              📶 WiFi Test - Download speed only (5 seconds)
+            </p>
+          )}
+        </div>
 
         {/* Progress Bar */}
-        <AnimatePresence>
-          {testState === 'testing' && (
-            <motion.div
-              key="progress"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-2"
-            >
-              <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-cyan-500 rounded-full"
-                  initial={{ width: '0%' }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.5 }}
-                />
-              </div>
-              <p className="text-sm text-cyan-400 text-center">{progressText}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {testState === 'testing' && (
+          <div className="space-y-2">
+            <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-sm text-cyan-400 text-center">{progressText}</p>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4">
-          <AnimatePresence>
-            {testState === 'idle' && (
-              <motion.button
-                key="start"
-                onClick={handleStartTest}
-                disabled={!!error || !!configError}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold px-12 py-3 rounded-lg"
+          {testState === 'idle' && (
+            <button
+              onClick={handleStartTest}
+              disabled={!!error || !!configError}
+              className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold px-12 py-3 rounded-lg min-h-11 transition-transform hover:scale-105 active:scale-95"
+            >
+              Start Test
+            </button>
+          )}
+
+          {testState === 'testing' && (
+            <div className="text-center">
+              <MdLoop className="w-6 h-6 animate-spin inline text-cyan-400" />
+            </div>
+          )}
+
+          {testState === 'success' && (
+            <button
+              onClick={handleNextRoom}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-12 py-3 rounded-lg min-h-11 transition-transform hover:scale-105 active:scale-95"
+            >
+              {isLastRoom ? 'View Analysis' : 'Next Room'}
+            </button>
+          )}
+
+          {testState === 'error' && (
+            <div className="flex gap-4">
+              <button
+                onClick={handleRetry}
+                className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-8 py-3 rounded-lg min-h-11 transition-transform hover:scale-105 active:scale-95"
               >
-                Start Test
-              </motion.button>
-            )}
-
-            {testState === 'testing' && (
-              <motion.div key="testing" className="text-center">
-                <Loader className="w-6 h-6 animate-spin inline text-cyan-400" />
-              </motion.div>
-            )}
-
-            {testState === 'success' && (
-              <motion.button
-                key="next"
+                Retry
+              </button>
+              <button
                 onClick={handleNextRoom}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-12 py-3 rounded-lg"
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold px-8 py-3 rounded-lg min-h-11 transition-transform hover:scale-105 active:scale-95"
               >
-                {isLastRoom ? 'View Analysis' : 'Next Room'}
-              </motion.button>
-            )}
-
-            {testState === 'error' && (
-              <motion.div key="error" className="flex gap-4">
-                <motion.button
-                  onClick={handleRetry}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-8 py-3 rounded-lg"
-                >
-                  Retry
-                </motion.button>
-                <motion.button
-                  onClick={handleNextRoom}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold px-8 py-3 rounded-lg"
-                >
-                  {isLastRoom ? 'Skip' : 'Skip Room'}
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {isLastRoom ? 'Skip' : 'Skip Room'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Results List */}
-        <div className="flex-1 min-h-[300px] bg-white/5 backdrop-blur-md border border-white/20 rounded-lg p-6 overflow-y-auto">
+        <div className="flex-1 min-h-75 bg-white/5 backdrop-blur-md border border-white/20 rounded-lg p-6 overflow-y-auto">
           {dashboardResults.length === 0 ? (
             <p className="text-gray-400 text-center">Results will appear here</p>
           ) : (
             <div className="space-y-4">
               {dashboardResults.map((result, i) => (
-                <motion.div
+                <div
                   key={result.room}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
                   className="space-y-1"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{result.room}</span>
-                    {result.anomaly && <span className="text-xs text-orange-400">🚩 Anomaly</span>}
+                    <div className="flex items-center gap-2">
+                      {result.isModemTest ? (
+                        <span className="text-xs text-cyan-400">📡 Modem</span>
+                      ) : (
+                        <span className="text-xs text-blue-400">📶 WiFi</span>
+                      )}
+                      {result.anomaly && <span className="text-xs text-orange-400">🚩 Anomaly</span>}
+                    </div>
                   </div>
                   <p className="text-sm text-cyan-300">
-                    ↓ {Math.round(result.dl)} Mbps | ↑ {Math.round(result.ul)} Mbps | Ping {Math.round(result.ping)}ms | Jitter {Math.round(result.jitter)}ms
+                    {result.isModemTest ? (
+                      <>↓ {Math.round(result.dl)} Mbps | ↑ {Math.round(result.ul)} Mbps | Ping {Math.round(result.ping)}ms | Jitter {Math.round(result.jitter)}ms</>
+                    ) : (
+                      <>↓ {Math.round(result.dl)} Mbps <span className="text-gray-400">(WiFi speed test)</span></>
+                    )}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}

@@ -1,4 +1,4 @@
-import { execAsync, closeDb } from './client.js';
+import { execAsync, closeDb } from './client';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -21,8 +21,19 @@ async function runMigrations() {
       const sql = fs.readFileSync(filePath, 'utf8');
 
       console.log(`Executing migration: ${file}`);
-      await execAsync(sql);
-      console.log(`✓ ${file} completed`);
+      try {
+        await execAsync(sql);
+        console.log(`✓ ${file} completed`);
+      } catch (err: any) {
+        if (err.message && (
+          err.message.includes('duplicate column name') || 
+          err.message.includes('already exists')
+        )) {
+          console.warn(`⚠ ${file} partially or fully skipped (already exists).`);
+        } else {
+          throw err;
+        }
+      }
     }
 
     console.log('All migrations completed successfully');

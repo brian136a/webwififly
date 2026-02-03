@@ -1,9 +1,0 @@
-# Page 3 Background Image Placeholder
-
-Place your background image here: `page3-background.jpg`
-
-Recommended image specifications:
-- Format: JPG
-- Dimensions: 1920x1080 or higher
-- Theme: Focused, calm, technology ambience
-- Should work well with a 60% dark overlay

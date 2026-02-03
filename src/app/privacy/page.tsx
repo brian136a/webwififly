@@ -1,8 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { MdSecurity, MdArrowBack } from 'react-icons/md';
 
 export default function PrivacyPage() {
   const router = useRouter();
@@ -51,7 +50,7 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24">
+    <div className="relative min-h-dvh flex items-center justify-center overflow-hidden pb-24">
       {/* Background with overlay */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-linear-to-br from-gray-900 via-blue-900 to-gray-900" />
@@ -61,37 +60,22 @@ export default function PrivacyPage() {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-3xl">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <div className="bg-cyan-500/20 p-3 rounded-xl border border-cyan-500/50">
-              <Shield className="w-8 h-8 text-cyan-400" />
+              <MdSecurity className="w-8 h-8 text-cyan-400" />
             </div>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">Privacy Policy</h1>
           <p className="text-gray-300 text-sm">
             Effective Date: November 12, 2025
           </p>
-        </motion.div>
+        </div>
 
         {/* Privacy Content */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-6"
-        >
+        <div className="space-y-6">
           {sections.map((section, index) => (
-            <motion.div
-              key={section.title}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + index * 0.05 }}
-              className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6"
-            >
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
               <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                 <div className="w-1 h-6 bg-cyan-500 rounded" />
                 {section.title}
@@ -99,25 +83,20 @@ export default function PrivacyPage() {
               <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">
                 {section.content}
               </p>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Return to previous page */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-12"
-        >
+        <div className="text-center mt-12">
           <button
             onClick={goBack}
             className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <MdArrowBack className="w-4 h-4" />
             <span>Go Back</span>
           </button>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

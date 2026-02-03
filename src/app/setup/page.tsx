@@ -2,9 +2,8 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+import { MdError, MdCheckCircle, MdInfo, MdClose } from 'react-icons/md';
 import { useSetupStore } from '@/store/setupStore';
 import Autocomplete from '@/components/common/Autocomplete';
 import {
@@ -71,24 +70,18 @@ function ValidationMessage({ type, message }: ValidationMessageProps) {
 
   const Icon =
     type === 'error'
-      ? AlertCircle
+      ? MdError
       : type === 'warning'
-        ? Info
-        : CheckCircle;
+        ? MdInfo
+        : MdCheckCircle;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.2 }}
-      className={`mt-2 flex items-start gap-2.5 px-3 py-2 rounded-lg border ${style.bg} ${style.border}`}
-    >
+    <div className={`mt-2 flex items-start gap-2.5 px-3 py-2 rounded-lg border ${style.bg} ${style.border}`}>
       <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${style.icon}`} />
       <p className={`text-xs md:text-sm font-medium ${style.text}`}>
         {message}
       </p>
-    </motion.div>
+    </div>
   );
 }
 
@@ -354,11 +347,11 @@ export default function SetupPage() {
     'w-full rounded-lg bg-white/10 border border-white/10 px-4 py-3 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition disabled:opacity-50 disabled:cursor-not-allowed [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:-m-0 [&::-webkit-inner-spin-button]:-m-0';
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24">
+    <div className="relative min-h-dvh flex items-center justify-center overflow-hidden pb-24">
       {/* Background with overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/page3-background.jpg"
+          src="/images/background-desktop.webp"
           alt="Background"
           fill
           className="object-cover"
@@ -418,16 +411,9 @@ export default function SetupPage() {
 
         {/* Card */}
         <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 sm:p-8 shadow-xl">
-          <AnimatePresence mode="wait">
-            {/* Step 1: ISP */}
-            {step === 1 && (
-              <motion.div
-                key="step-1"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={containerVariants}
-              >
+          {/* Step 1: ISP */}
+          {step === 1 && (
+            <div>
                 <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
                   Who is your ISP?
                 </h2>
@@ -461,18 +447,12 @@ export default function SetupPage() {
                     message="Great"
                   />
                 )}
-              </motion.div>
+            </div>
             )}
 
             {/* Step 2: Download Speed */}
             {step === 2 && (
-              <motion.div
-                key="step-2"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={containerVariants}
-              >
+              <div>
                 <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
                   What&apos;s your download speed?
                 </h2>
@@ -526,18 +506,12 @@ export default function SetupPage() {
                     message="Great"
                   />
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* Step 3: Cost */}
             {step === 3 && (
-              <motion.div
-                key="step-3"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={containerVariants}
-              >
+              <div>
                 <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
                   How much do you pay per month?
                 </h2>
@@ -594,18 +568,12 @@ export default function SetupPage() {
                     message="Great"
                   />
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* Step 4: Modem Room */}
             {step === 4 && (
-              <motion.div
-                key="step-4"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={containerVariants}
-              >
+              <div>
                 <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
                   Where is your modem located?
                 </h2>
@@ -638,18 +606,12 @@ export default function SetupPage() {
                     message={`Room added: ${modemRoom}`}
                   />
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* Step 5: Additional Rooms */}
             {step === 5 && (
-              <motion.div
-                key="step-5"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={containerVariants}
-              >
+              <div>
                 <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
                   Add additional rooms to test
                 </h2>
@@ -672,7 +634,7 @@ export default function SetupPage() {
                     type="button"
                     onClick={handleAddRoom}
                     disabled={!roomInputValidation.valid || !roomInput.trim()}
-                    className="h-12 whitespace-nowrap rounded-lg bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-3 transition font-medium text-sm md:text-base focus:ring-2 focus:ring-cyan-400 focus:outline-none"
+                    className="h-12 whitespace-nowrap rounded-lg bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-3 transition font-medium text-sm md:text-base focus:ring-2 focus:ring-cyan-400 focus:outline-none min-h-11"
                     aria-label="Add room to test list"
                   >
                     Add Room
@@ -706,7 +668,7 @@ export default function SetupPage() {
                             className="ml-1 hover:text-cyan-100 transition"
                             aria-label={`Remove ${room}`}
                           >
-                            <X className="w-4 h-4" />
+                            <MdClose className="w-4 h-4" />
                           </button>
                         </div>
                       ))}
@@ -720,9 +682,8 @@ export default function SetupPage() {
                     message="Add at least one room to continue"
                   />
                 )}
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
 
           {/* Navigation */}
           <div className="mt-8 flex items-center justify-between gap-3">
@@ -730,7 +691,7 @@ export default function SetupPage() {
               type="button"
               onClick={() => step > 1 && setStep(step - 1)}
               disabled={step === 1 || isSubmitting}
-              className="h-12 px-4 md:px-6 py-2 text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition rounded-lg hover:bg-white/5 focus:ring-2 focus:ring-cyan-400 focus:outline-none"
+              className="h-12 px-4 md:px-6 py-2 text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition rounded-lg hover:bg-white/5 focus:ring-2 focus:ring-cyan-400 focus:outline-none min-h-11"
               aria-label="Go to previous step"
             >
               ← Back
@@ -744,7 +705,7 @@ export default function SetupPage() {
                 step === stepsTotal
                   ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-800 focus:ring-green-400'
                   : 'bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-700 focus:ring-cyan-400'
-              }`}
+              } min-h-11`}
               aria-label={step === stepsTotal ? 'Begin WiFi speed test' : 'Go to next step'}
             >
               {isSubmitting ? (

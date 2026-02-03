@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         raw_dl_bytes, raw_ul_bytes, duration_ms, anomaly, display_dl_mbps, timestamp, created_at_ms
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        require('crypto').randomUUID(),
+        require('crypto').randomUUID ? require('crypto').randomUUID() : Math.random().toString(36).substring(2),
         validated.sessionId,
         validated.roomName,
         validated.downloadMbps,

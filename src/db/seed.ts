@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { runAsync, closeDb } from './client.js';
+import { runAsync, closeDb } from './client';
 
 async function seedDatabase() {
   try {

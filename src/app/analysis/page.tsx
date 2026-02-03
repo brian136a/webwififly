@@ -2,19 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
   Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { HelpCircle, Upload, CheckCircle, AlertCircle, Download, Zap, TrendingUp } from 'lucide-react';
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { MdHelp, MdFileUpload, MdCheckCircle, MdError, MdDownload, MdBolt, MdTrendingUp } from 'react-icons/md';
 import { useSetupStore } from '@/store/setupStore';
 import type { RoomTestResult } from '@/types/librespeed';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Sanity check threshold for impossible speeds (home internet maxes at ~1000 Mbps)
 const UI_THRESHOLD = 1000;
@@ -84,13 +95,7 @@ function QuickDiagnosisTeaser() {
   if (isTeaserDismissed) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white/6 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6"
-    >
+    <div className="bg-white/6 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6">
       <div className="flex items-start gap-4">
         <div className="text-cyan-400 mt-1">ℹ️</div>
         <div className="flex-1">
@@ -112,7 +117,7 @@ function QuickDiagnosisTeaser() {
           ✕
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -125,12 +130,7 @@ function RoomDiagnosticsPreview({ worstRoom }: RoomDiagnosticsPreviewProps) {
   if (!worstRoom) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="bg-white/6 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8"
-    >
+    <div className="bg-white/6 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-cyan-400 mb-1">Worst Room Diagnosis (Preview)</h3>
@@ -177,23 +177,18 @@ function RoomDiagnosticsPreview({ worstRoom }: RoomDiagnosticsPreviewProps) {
 
       <a
         href="#micro-form"
-        className="inline-flex items-center gap-2 text-sm font-medium bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-medium bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition-colors min-h-11"
       >
         Unlock My Free Advanced Diagnostics →
       </a>
-    </motion.div>
+    </div>
   );
 }
 
 // Component C: Costed Solutions Transparent
 function CostedSolutionsTransparent() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       <div className="bg-white/10 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-6 sm:p-8">
         <h3 className="text-2xl font-bold mb-2">✅ Your Top 3 Bottlenecks Identified</h3>
         <p className="text-gray-300 mb-6">
@@ -262,7 +257,7 @@ function CostedSolutionsTransparent() {
           </p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -291,17 +286,21 @@ export default function AnalysisPage() {
     const ispPlanSpeed = downloadSpeed || 100;
     const processed = testResults
       .map((result: RoomTestResult) => {
-        const rawDl = result.result.dl;
+        const rawDl = result.result?.dl ?? 0;
+        const rawUl = result.result?.ul ?? 0;
+        const rawPing = result.result?.ping ?? 0;
+        const rawJitter = result.result?.jitter ?? 0;
+        
         const hasAnomaly = rawDl > UI_THRESHOLD;
         const displayDl = Math.min(rawDl, UI_THRESHOLD);
         
         return {
-          room: result.room,
+          room: result.room || 'Unknown Room',
           dl: displayDl,
-          ul: result.result.ul,
-          ping: result.result.ping,
-          jitter: result.result.jitter,
-          dlPercent: Math.round((displayDl / ispPlanSpeed) * 100),
+          ul: rawUl,
+          ping: rawPing,
+          jitter: rawJitter,
+          dlPercent: ispPlanSpeed > 0 ? Math.round((displayDl / ispPlanSpeed) * 100) : 0,
           dlDisplay: displayDl,
           dlRaw: rawDl,
           hasAnomaly,
@@ -320,7 +319,7 @@ export default function AnalysisPage() {
 
   if (!mounted || analysisData.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-linear-to-br from-gray-900 via-blue-900 to-gray-900">
+      <div className="min-h-dvh flex items-center justify-center text-white bg-linear-to-br from-gray-900 via-blue-900 to-gray-900">
         <p>Loading analysis...</p>
       </div>
     );
@@ -341,31 +340,26 @@ export default function AnalysisPage() {
   const jitterData = [...analysisData].sort((a, b) => a.jitter - b.jitter);
 
   const MetricsEducationSection = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.28 }}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-    >
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {[
         {
           label: 'Download Speed',
-          icon: <Download className="w-5 h-5 sm:w-6 sm:h-6" />,
+          icon: <MdDownload className="w-5 h-5 sm:w-6 sm:h-6" />,
           help: 'How fast data comes to you. Needed for streaming, browsing, gaming.',
         },
         {
           label: 'Upload Speed',
-          icon: <Upload className="w-5 h-5 sm:w-6 sm:h-6" />,
+          icon: <MdFileUpload className="w-5 h-5 sm:w-6 sm:h-6" />,
           help: 'How fast data leaves you. Needed for video calls and file uploads.',
         },
         {
           label: 'Ping (Latency)',
-          icon: <Zap className="w-5 h-5 sm:w-6 sm:h-6" />,
+          icon: <MdBolt className="w-5 h-5 sm:w-6 sm:h-6" />,
           help: 'How fast you ping the server. Lower is better for gaming & calls.',
         },
         {
           label: 'Jitter',
-          icon: <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />,
+          icon: <MdTrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />,
           help: 'Ping consistency. Stable (low) is better for smooth experience.',
         },
       ].map((metric) => (
@@ -383,33 +377,24 @@ export default function AnalysisPage() {
           <p className="text-xs text-gray-400 leading-relaxed">{metric.help}</p>
         </div>
       ))}
-    </motion.div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-6 pb-20">
+    <div className="min-h-dvh bg-linear-to-br from-gray-900 via-blue-900 to-gray-900 text-white p-4 sm:p-6 pb-20">
       <div className="absolute inset-0 bg-black/50 z-0" />
 
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* ===== A. HEADER ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 sm:mb-12"
-        >
+        <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">Your WiFi Network Analysis</h1>
           <p className="text-gray-300 text-sm sm:text-base">
             Test completed on {new Date().toLocaleDateString()} • {analysisData.length} rooms tested
           </p>
-        </motion.div>
+        </div>
 
         {/* ===== B. YOUR SPEED VS YOUR PLAN (FACTS-FIRST) ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8"
-        >
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8">
           <div className="mb-6">
             <h2 className="text-xl sm:text-2xl font-bold mb-2">Your Speed vs Your Plan</h2>
             <p className="text-gray-300 text-sm sm:text-base">
@@ -418,7 +403,7 @@ export default function AnalysisPage() {
             {hasAnomalies && (
               <div className="mt-3 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
                 <p className="text-xs sm:text-sm text-yellow-300 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <MdError className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>Some test values look unusual — visuals have been adjusted for clarity. If numbers look incorrect, contact support for a deeper check.</span>
                 </p>
               </div>
@@ -428,10 +413,9 @@ export default function AnalysisPage() {
           {/* Room summary cards (concise factual view) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {analysisData.map((room) => (
-              <motion.div
+              <div
                 key={room.room}
-                whileHover={{ scale: 1.02 }}
-                className="bg-white/5 border border-white/10 rounded-lg p-4 transition-all"
+                className="bg-white/5 border border-white/10 rounded-lg p-4 transition-all hover:scale-105"
               >
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-sm sm:text-base">{room.room}</h3>
@@ -448,22 +432,17 @@ export default function AnalysisPage() {
                 <p className="text-xs sm:text-sm text-gray-300 mb-3">
                   {room.dlDisplay} Mbps • {room.dlPercent}% of plan
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* NOTE: Removed generic "What This Means" and "Improvement Potential" sections in Phase 1.
             Those narrative/diagnostic sections will be replaced with a concise facts-first flow
             and a soft CTA to request deeper analysis. */}
 
         {/* ===== F. VISUALS (TOGGLE SIMPLE/DETAILED) ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold">Performance Metrics</h2>
             <button
@@ -503,18 +482,16 @@ export default function AnalysisPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-700/50 rounded-lg h-6 sm:h-8 overflow-hidden">
-                          <motion.div
-                            className="h-full bg-cyan-500 rounded-lg flex items-center justify-end pr-2 sm:pr-3"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${barWidth}%` }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
+                          <div
+                            className="h-full bg-cyan-500 rounded-lg flex items-center justify-end pr-2 sm:pr-3 transition-all duration-1000"
+                            style={{ width: `${barWidth}%` }}
                           >
                             {displayPercent > 15 && (
                               <span className="text-white font-bold text-xs sm:text-sm whitespace-nowrap">
                                 {displayPercent}%{item.hasAnomaly ? '*' : ''}
                               </span>
                             )}
-                          </motion.div>
+                          </div>
                         </div>
                         {displayPercent <= 15 && (
                           <span className="text-cyan-400 font-bold text-xs sm:text-sm shrink-0">
@@ -537,11 +514,7 @@ export default function AnalysisPage() {
 
           {/* Graphs - Conditional on showDetailedView */}
           {showDetailedView && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-8 mt-8"
-            >
+            <div className="space-y-8 mt-8">
               {/* Download Speed Graph */}
               <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
                 <div className="mb-6">
@@ -550,36 +523,51 @@ export default function AnalysisPage() {
                     How fast you can pull content from the internet
                   </p>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart
-                    data={dlData}
-                    margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis
-                      dataKey="room"
-                      stroke="rgba(255,255,255,0.6)"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'Mbps', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(0,217,255,0.5)',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value) => [`${value} Mbps`, 'Download']}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="dl"
-                      stroke="#00D9FF"
-                      strokeWidth={3}
-                      dot={{ fill: '#00D9FF', r: 6 }}
-                      isAnimationActive={true}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                  <Line
+                    data={{
+                      labels: dlData.map(d => d.room),
+                      datasets: [{
+                        label: 'Download Speed',
+                        data: dlData.map(d => d.dl),
+                        borderColor: '#00D9FF',
+                        backgroundColor: '#00D9FF',
+                        tension: 0.1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          backgroundColor: 'rgba(0,0,0,0.8)',
+                          titleColor: '#fff',
+                          bodyColor: '#fff',
+                          borderColor: 'rgba(0,217,255,0.5)',
+                          borderWidth: 1,
+                          cornerRadius: 8,
+                          callbacks: {
+                            label: (context) => `${context.parsed.y} Mbps`
+                          }
+                        }
+                      },
+                      scales: {
+                        x: {
+                          ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } },
+                          grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                          ticks: { color: 'rgba(255,255,255,0.6)' },
+                          grid: { color: 'rgba(255,255,255,0.1)' },
+                          title: { display: true, text: 'Mbps', color: 'rgba(255,255,255,0.6)' }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Upload Speed Graph */}
@@ -590,36 +578,51 @@ export default function AnalysisPage() {
                     How fast you can send content to the internet
                   </p>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart
-                    data={ulData}
-                    margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis
-                      dataKey="room"
-                      stroke="rgba(255,255,255,0.6)"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'Mbps', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(0,217,255,0.5)',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value) => [`${value} Mbps`, 'Upload']}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="ul"
-                      stroke="#00B8D4"
-                      strokeWidth={3}
-                      dot={{ fill: '#00B8D4', r: 6 }}
-                      isAnimationActive={true}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                  <Line
+                    data={{
+                      labels: ulData.map(d => d.room),
+                      datasets: [{
+                        label: 'Upload Speed',
+                        data: ulData.map(d => d.ul),
+                        borderColor: '#00B8D4',
+                        backgroundColor: '#00B8D4',
+                        tension: 0.1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          backgroundColor: 'rgba(0,0,0,0.8)',
+                          titleColor: '#fff',
+                          bodyColor: '#fff',
+                          borderColor: 'rgba(0,217,255,0.5)',
+                          borderWidth: 1,
+                          cornerRadius: 8,
+                          callbacks: {
+                            label: (context) => `${context.parsed.y} Mbps`
+                          }
+                        }
+                      },
+                      scales: {
+                        x: {
+                          ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } },
+                          grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                          ticks: { color: 'rgba(255,255,255,0.6)' },
+                          grid: { color: 'rgba(255,255,255,0.1)' },
+                          title: { display: true, text: 'Mbps', color: 'rgba(255,255,255,0.6)' }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Ping Graph */}
@@ -630,36 +633,51 @@ export default function AnalysisPage() {
                     How fast your connection responds (lower is better)
                   </p>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart
-                    data={pingData}
-                    margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis
-                      dataKey="room"
-                      stroke="rgba(255,255,255,0.6)"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'ms', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(0,217,255,0.5)',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value) => [`${value} ms`, 'Ping']}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="ping"
-                      stroke="#20C997"
-                      strokeWidth={3}
-                      dot={{ fill: '#20C997', r: 6 }}
-                      isAnimationActive={true}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                  <Line
+                    data={{
+                      labels: pingData.map(d => d.room),
+                      datasets: [{
+                        label: 'Ping',
+                        data: pingData.map(d => d.ping),
+                        borderColor: '#20C997',
+                        backgroundColor: '#20C997',
+                        tension: 0.1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          backgroundColor: 'rgba(0,0,0,0.8)',
+                          titleColor: '#fff',
+                          bodyColor: '#fff',
+                          borderColor: 'rgba(0,217,255,0.5)',
+                          borderWidth: 1,
+                          cornerRadius: 8,
+                          callbacks: {
+                            label: (context) => `${context.parsed.y} ms`
+                          }
+                        }
+                      },
+                      scales: {
+                        x: {
+                          ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } },
+                          grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                          ticks: { color: 'rgba(255,255,255,0.6)' },
+                          grid: { color: 'rgba(255,255,255,0.1)' },
+                          title: { display: true, text: 'ms', color: 'rgba(255,255,255,0.6)' }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Jitter Graph */}
@@ -670,48 +688,58 @@ export default function AnalysisPage() {
                     How stable your connection is (lower is better)
                   </p>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart
-                    data={jitterData}
-                    margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis
-                      dataKey="room"
-                      stroke="rgba(255,255,255,0.6)"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis stroke="rgba(255,255,255,0.6)" label={{ value: 'ms', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(0,217,255,0.5)',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value) => [`${value} ms`, 'Jitter']}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="jitter"
-                      stroke="#8B5CF6"
-                      strokeWidth={3}
-                      dot={{ fill: '#8B5CF6', r: 6 }}
-                      isAnimationActive={true}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                  <Line
+                    data={{
+                      labels: jitterData.map(d => d.room),
+                      datasets: [{
+                        label: 'Jitter',
+                        data: jitterData.map(d => d.jitter),
+                        borderColor: '#8B5CF6',
+                        backgroundColor: '#8B5CF6',
+                        tension: 0.1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          backgroundColor: 'rgba(0,0,0,0.8)',
+                          titleColor: '#fff',
+                          bodyColor: '#fff',
+                          borderColor: 'rgba(0,217,255,0.5)',
+                          borderWidth: 1,
+                          cornerRadius: 8,
+                          callbacks: {
+                            label: (context) => `${context.parsed.y} ms`
+                          }
+                        }
+                      },
+                      scales: {
+                        x: {
+                          ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } },
+                          grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                          ticks: { color: 'rgba(255,255,255,0.6)' },
+                          grid: { color: 'rgba(255,255,255,0.1)' },
+                          title: { display: true, text: 'ms', color: 'rgba(255,255,255,0.6)' }
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
 
         {/* ===== G. DETAILED RESULTS TABLE ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8 overflow-x-auto"
-        >
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 mb-8 overflow-x-auto">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">All Test Results</h2>
           <p className="text-xs sm:text-sm text-gray-400 mb-4">Raw data from your speed tests across all rooms:</p>
           <table className="w-full text-xs sm:text-sm">
@@ -741,7 +769,7 @@ export default function AnalysisPage() {
               * Unusual values detected — these rooms had test anomalies and speeds are capped at {UI_THRESHOLD} Mbps for display
             </p>
           )}
-        </motion.div>
+        </div>
 
         {/* ===== G-PLUS. ROOM DIAGNOSTICS PREVIEW ===== */}
         <RoomDiagnosticsPreview worstRoom={worstRoom} />
@@ -750,30 +778,20 @@ export default function AnalysisPage() {
         <QuickDiagnosisTeaser />
 
         {/* ===== I. SOFT CTA: WANT TO KNOW WHY? ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="bg-white/6 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6"
-        >
+        <div className="bg-white/6 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold">Want to know what's causing low speeds?</h3>
               <p className="text-sm text-gray-300">This page shows your results. Our free advanced analysis tells you WHY.</p>
             </div>
             <div className="sm:shrink-0">
-              <a href="#micro-form" className="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium">Get My Bottlenecks →</a>
+              <a href="#micro-form" className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium min-h-11 flex items-center justify-center">Get My Bottlenecks →</a>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* ===== H. MICRO-COMMITMENT FORM ===== */}
-        <motion.div id="micro-form"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-8"
-        >
+        <div id="micro-form" className="mb-8">
           {submitted ? (
             <CostedSolutionsTransparent />
           ) : (
@@ -831,19 +849,14 @@ export default function AnalysisPage() {
               </form>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* ===== I. EDUCATIONAL SIDEBAR / INLINE HELP ===== */}
         <MetricsEducationSection />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8"
-        >
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 mb-8">
           <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-cyan-400" />
+            <MdHelp className="w-5 h-5 text-cyan-400" />
             Common WiFi Questions
           </h2>
           <div className="space-y-4 text-sm">
@@ -883,15 +896,10 @@ export default function AnalysisPage() {
               </p>
             </details>
           </div>
-        </motion.div>
+        </div>
 
         {/* ===== J. FOOTER ACTIONS ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex flex-col sm:flex-row justify-center gap-4 pt-8 pb-12"
-        >
+        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8 pb-12">
           <button
             onClick={() => window.print()}
             className="text-sm sm:text-base px-6 sm:px-8 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors"
@@ -915,7 +923,7 @@ export default function AnalysisPage() {
           >
             🔄 Test Again
           </button>
-        </motion.div>
+        </div>
 
         {/* Removed duplicated graphs and plan-investment block to keep facts-first flow and reduce page weight. */}
       </div>

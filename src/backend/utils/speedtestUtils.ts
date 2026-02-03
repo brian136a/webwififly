@@ -71,15 +71,19 @@ export function detectAnomaly(result: SpeedTestResult): AnomalyCheckResult {
     }
   }
 
-  // Rule 4: Ping/Jitter sanity
-  if (result.pingMs < 1) {
-    isAnomaly = true;
-    notes.push(`Ping ${result.pingMs} is unrealistically low`);
-  }
+  // Rule 4: Ping/Jitter sanity (skip for room tests where values are intentionally zero)
+  const isLikelyRoomTest = result.pingMs === 0 && result.jitterMs === 0 && result.uploadMbps === 0;
 
-  if (result.jitterMs < 0) {
-    isAnomaly = true;
-    notes.push(`Jitter ${result.jitterMs} is negative`);
+  if (!isLikelyRoomTest) {
+    if (result.pingMs < 1) {
+      isAnomaly = true;
+      notes.push(`Ping ${result.pingMs} is unrealistically low`);
+    }
+
+    if (result.jitterMs < 0) {
+      isAnomaly = true;
+      notes.push(`Jitter ${result.jitterMs} is negative`);
+    }
   }
 
   // Cap display values
